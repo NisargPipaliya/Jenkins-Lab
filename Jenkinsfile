@@ -6,6 +6,32 @@ pipeline {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github', url: 'https://github.com/NisargPipaliya/Jenkins-Lab']])
             }
         }
+        stage("Install Docker") {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                        if ! [ -x "$(command -v docker)" ]; then
+                            echo "Docker is not installed. Installing Docker..."
+                            sudo apt-get update
+                            sudo apt-get install -y docker.io
+                            sudo systemctl start docker
+                            sudo systemctl enable docker
+                        else
+                            echo "Docker is already installed."
+                        fi
+                        '''
+                    } else {
+                        bat '''
+                        docker --version || (
+                            echo "Docker is not installed. Installing Docker..."
+                            powershell "Install-Package -Name docker -ProviderName DockerMsftProvider -Force"
+                        )
+                        '''
+                    }
+                }
+            }
+        }
         stage("Build Image") {
             steps {
                 script {
